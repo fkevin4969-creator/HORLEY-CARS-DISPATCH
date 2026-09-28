@@ -114,7 +114,7 @@ function renderDriverGps(){
  }
 }
 
-function selectById(id){const b=[...active,...history].find(x=>x.id===id);if(b)selectJob(b)}
+function selectById(id){;const b=[...active,...history].find(x=>x.id===id);if(b)if(b)showJobMarkers(b);selectJob(b)}
 function selectJob(b){
  selected=b;$('detailTitle').textContent='Booking '+b.id.slice(0,8)+'…';$('detailPickup').textContent=b.pickup_address;$('detailDestination').textContent=b.destination_address;
  $('detailStatus').textContent='Status: '+b.booking_status.replaceAll('_',' ').toUpperCase()+' • '+b.passenger_count+' passenger';
@@ -124,6 +124,28 @@ function selectJob(b){
    $('driverSelect').innerHTML='<option value="">Choose driver…</option>'+driverRows.map(d=>`<option value="${d.id}" ${d.id===b.driver_id?'selected':''}>${esc(d.full_name)} — ${esc(d.status)}</option>`).join('');
    $('assignButton').textContent=b.driver_id?'Reassign Driver':'Assign Driver';
  }
+
+ function showJobMarkers(b){
+  if(!roadMap || !b) return;
+
+  if(window.pickupMarker) roadMap.removeLayer(window.pickupMarker);
+  if(window.destinationMarker) roadMap.removeLayer(window.destinationMarker);
+
+  const plat = Number(b.pickup_latitude);
+  const plng = Number(b.pickup_longitude);
+  const dlat = Number(b.destination_latitude);
+  const dlng = Number(b.destination_longitude);
+
+  if(Number.isFinite(plat) && Number.isFinite(plng)){
+    window.pickupMarker = L.marker([plat,plng]).addTo(roadMap)
+      .bindPopup("Pickup: " + (b.pickup_address || "Pickup"));
+  }
+
+  if(Number.isFinite(dlat) && Number.isFinite(dlng)){
+    window.destinationMarker = L.marker([dlat,dlng]).addTo(roadMap)
+      .bindPopup("Destination: " + (b.destination_address || "Destination"));
+  }
+}
 }
 function clearDetail(){selected=null;$('detailTitle').textContent='Select a job';$('detailPickup').textContent='Choose a booking from the left.';$('detailDestination').textContent='—';$('detailStatus').textContent='';$('assignBox').style.display='none'}
 $('assignButton').onclick=async()=>{
