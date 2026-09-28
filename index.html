@@ -114,9 +114,7 @@ function renderDriverGps(){
  }
 }
 
-function selectById(id){;const b=[...active,...history].find(x=>x.id===id);if(b)if(b)showJobMarkers(b);
-function selectJob(id){const b=[...active,...history].find(x=>x.id===id);if(b)showJobMarkers(b);
-if(!b)return;                        
+                  
 function selectJob(b){
  selected=b;$('detailTitle').textContent='Booking '+b.id.slice(0,8)+'…';$('detailPickup').textContent=b.pickup_address;$('detailDestination').textContent=b.destination_address;
  $('detailStatus').textContent='Status: '+b.booking_status.replaceAll('_',' ').toUpperCase()+' • '+b.passenger_count+' passenger';
