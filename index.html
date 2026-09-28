@@ -89,9 +89,6 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(roadMap);
-   subdomains:'abcd',maxZoom:20,
-   attribution:'&copy; OpenStreetMap contributors &copy; CARTO'
- }).addTo(roadMap);
  setTimeout(()=>roadMap.invalidateSize(),150);
 }
 
