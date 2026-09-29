@@ -7,6 +7,7 @@ on:
       - 'driver-app/**'
       - '.github/workflows/build-driver-android.yml'
 
+# Fresh test build requested 2026-09-29
 jobs:
   build:
     runs-on: ubuntu-latest
