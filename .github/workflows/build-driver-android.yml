@@ -18,8 +18,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: driver-app/package-lock.json
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -39,11 +37,11 @@ jobs:
               s=s.replace('<application',perms+'\n    <application',1)
           p.write_text(s)
           PY
-      - name: Sync web app
+      - name: Sync Horley Cars Driver
         run: npx cap sync android
-      - name: Build debug APK
+      - name: Build Android test APK
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug
-      - name: Upload test APK
+      - name: Upload Horley Cars Driver APK
         uses: actions/upload-artifact@v4
         with:
           name: horley-cars-driver-test-apk
