@@ -1,0 +1,50 @@
+name: Build Horley Cars Driver Android
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'driver-app/**'
+      - '.github/workflows/build-driver-android.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: driver-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: driver-app/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install dependencies
+        run: npm install
+      - name: Create Android project
+        run: npx cap add android
+      - name: Add Android location permissions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('android/app/src/main/AndroidManifest.xml')
+          s=p.read_text()
+          perms='''<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.INTERNET" />'''
+          if 'ACCESS_FINE_LOCATION' not in s:
+              s=s.replace('<application',perms+'\n    <application',1)
+          p.write_text(s)
+          PY
+      - name: Sync web app
+        run: npx cap sync android
+      - name: Build debug APK
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: horley-cars-driver-test-apk
+          path: driver-app/android/app/build/outputs/apk/debug/app-debug.apk
