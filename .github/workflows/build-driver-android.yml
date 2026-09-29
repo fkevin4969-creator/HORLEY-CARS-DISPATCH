@@ -7,7 +7,9 @@ on:
       - 'driver-app/**'
       - '.github/workflows/build-driver-android.yml'
 
-# Fresh test build requested 2026-09-29
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -42,8 +44,18 @@ jobs:
         run: npx cap sync android
       - name: Build Android test APK
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug
-      - name: Upload Horley Cars Driver APK
+      - name: Upload Horley Cars Driver APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: horley-cars-driver-test-apk
           path: driver-app/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Publish direct-download APK
+        working-directory: .
+        run: |
+          mkdir -p downloads
+          cp driver-app/android/app/build/outputs/apk/debug/app-debug.apk downloads/Horley-Cars-Driver.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f downloads/Horley-Cars-Driver.apk
+          git commit -m "Update Horley Cars Driver APK" || exit 0
+          git push
