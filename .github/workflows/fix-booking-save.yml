@@ -1,0 +1,30 @@
+name: Fix booking save
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch Save Job
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old="let r=await db.from('bookings').insert(p);$('saveMsg').textContent=r.error?'Could not save: '+r.error.message:'Job saved ✓';"
+          new="let rpc={p_pickup_address:p.pickup_address,p_destination_address:p.destination_address,p_passenger_count:p.passenger_count,p_notes:p.notes,p_customer_name:$('name').value.trim()||null,p_customer_phone:$('phone').value.trim()||null,p_flight_number:null,p_fare:chosen,p_pickup_time:p.pickup_time,p_luggage_count:0,p_pickup_latitude:p.pickup_latitude??null,p_pickup_longitude:p.pickup_longitude??null,p_destination_latitude:p.destination_latitude??null,p_destination_longitude:p.destination_longitude??null};let r=await db.rpc('create_booking',rpc);if(!r.error&&$('newDriver').value){let b=Array.isArray(r.data)?r.data[0]:r.data;if(b?.id)r=await db.rpc('dispatch_assign_driver',{p_booking_id:b.id,p_driver_id:$('newDriver').value})}$('saveMsg').textContent=r.error?'Could not save: '+r.error.message:'Job saved ✓';"
+          if old not in s:
+              raise SystemExit('Save handler target not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git diff --cached --quiet || (git commit -m "Use secure RPC for dispatcher booking saves" && git push)
