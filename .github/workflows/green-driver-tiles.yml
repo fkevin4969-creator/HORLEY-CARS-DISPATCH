@@ -1,0 +1,33 @@
+name: Make all driver tiles green
+on:
+  push:
+    paths:
+      - '.github/workflows/green-driver-tiles.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set all numbered driver tiles to green
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old="function tileColour(d,i){let j=activeJob(d.id);return j&&statusColours[j.booking_status]?statusColours[j.booking_status]:colours[i%colours.length]}"
+          new="function tileColour(d,i){return '#16a34a'}"
+          if old not in s:
+              raise SystemExit('Driver tile colour function not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit green driver tiles
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Set all numbered driver tiles green"
+          git push
