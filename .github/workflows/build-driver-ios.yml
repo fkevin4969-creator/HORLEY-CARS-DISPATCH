@@ -1,0 +1,32 @@
+name: Build Horley Cars Driver iOS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'driver-app/**'
+      - '.github/workflows/build-driver-ios.yml'
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: driver-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+      - name: Create iOS project
+        run: npx cap add ios
+      - name: Sync Horley Cars Driver
+        run: npx cap sync ios
+      - name: Add iPhone location permission descriptions
+        run: |
+          /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string Horley Cars Driver uses your location while you are working so Dispatch can see your live vehicle position." ios/App/App/Info.plist || /usr/libexec/PlistBuddy -c "Set :NSLocationWhenInUseUsageDescription Horley Cars Driver uses your location while you are working so Dispatch can see your live vehicle position." ios/App/App/Info.plist
+      - name: Build iPhone simulator app
+        run: |
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
