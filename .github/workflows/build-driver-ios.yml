@@ -24,9 +24,8 @@ jobs:
         run: npx cap add ios
       - name: Sync Horley Cars Driver
         run: npx cap sync ios
-      - name: Add iPhone location permission descriptions
+      - name: Add iPhone location permission description
         run: |
           /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string Horley Cars Driver uses your location while you are working so Dispatch can see your live vehicle position." ios/App/App/Info.plist || /usr/libexec/PlistBuddy -c "Set :NSLocationWhenInUseUsageDescription Horley Cars Driver uses your location while you are working so Dispatch can see your live vehicle position." ios/App/App/Info.plist
       - name: Build iPhone simulator app
-        run: |
-          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+        run: xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
