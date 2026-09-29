@@ -2,6 +2,11 @@
   "appId": "uk.co.horleycars.driver",
   "appName": "Horley Cars Driver",
   "webDir": "www",
+  "backgroundColor": "#111827",
+  "ios": {
+    "contentInset": "automatic",
+    "preferredContentMode": "mobile"
+  },
   "android": {
     "allowMixedContent": false
   }
