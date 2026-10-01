@@ -1,0 +1,34 @@
+name: Fix Driver Logout
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-driver-logout.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch web and Android driver logout
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          files=['driver/index.html','driver-app/www/index.html']
+          for f in files:
+              p=Path(f)
+              s=p.read_text()
+              old="await sb.auth.signOut();location.reload()"
+              new="try{await sb.rpc('driver_go_offline')}catch(e){}await sb.auth.signOut();location.reload()"
+              if old not in s:
+                  raise SystemExit(f'logout code not found in {f}')
+              p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add driver/index.html driver-app/www/index.html
+          git commit -m "Set driver offline and clear map location on logout"
+          git push
