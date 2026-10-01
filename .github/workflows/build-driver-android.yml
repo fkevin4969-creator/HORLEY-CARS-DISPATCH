@@ -1,3 +1,4 @@
+# Rebuild trigger: logout GPS fix 2026-10-01
 name: Build Horley Cars Driver Android
 
 on:
