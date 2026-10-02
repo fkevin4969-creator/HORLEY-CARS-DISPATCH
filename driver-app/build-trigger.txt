@@ -1,3 +1,4 @@
 Build trigger: 2026-10-02
-Google Play AAB rebuild for Horley Cars Driver.
-Includes driver last-login tracking and logout/offline fixes.
+HORLEY CARS Driver Android rebuild.
+Includes new logo, Taxi Plate + Password login, new-driver registration and one-time admin approval code.
+Driver 30 / CPU remains excluded from migration.
