@@ -1,4 +1,4 @@
-# Rebuild trigger: logout GPS fix 2026-10-01
+# Rebuild trigger: Google Play AAB 2026-10-02
 name: Build Horley Cars Driver Android
 
 on:
