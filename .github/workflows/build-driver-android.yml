@@ -1,4 +1,4 @@
-# Rebuild trigger: Google Play AAB minSdk 24 2026-10-02
+# Rebuild trigger: driver navigation + clear job 2026-10-03
 name: Build Horley Cars Driver Android
 
 on:
