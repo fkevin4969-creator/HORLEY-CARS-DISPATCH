@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Prioritise address results within 10 miles of Horley
+      - name: Prioritise address results within 15 miles of Horley
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -22,7 +22,7 @@ jobs:
           p=Path('legacy-dispatch.html')
           s=p.read_text()
           pattern=r"async function lookup\(which\)\{.*?\}window\.lookup=lookup;"
-          replacement="""async function lookup(which){let input=$(which),q=input.value.trim(),box=$(which+'Suggestions');if(q.length<2)return;box.style.display='block';box.innerHTML='<div>Searching…</div>';try{const horleyLat=51.1743,horleyLon=-0.1780,deltaLat=0.145,deltaLon=0.23;let localUrl='https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=gb&limit=8&addressdetails=1&bounded=1&viewbox='+encodeURIComponent((horleyLon-deltaLon)+','+(horleyLat+deltaLat)+','+(horleyLon+deltaLon)+','+(horleyLat-deltaLat))+'&q='+encodeURIComponent(q);let r=await fetch(localUrl,{headers:{'Accept':'application/json'}}),j=await r.json();if(!j.length){let wide=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=gb&limit=6&addressdetails=1&q='+encodeURIComponent(q),{headers:{'Accept':'application/json'}});j=await wide.json()}box.innerHTML=j.length?j.map((x,i)=>`<div onclick=\"pickAddress('${which}',${i})\">${e(x.display_name)}</div>`).join(''):'<div>No local match — press FIND or type address manually.</div>';window['_lookup_'+which]=j}catch{box.innerHTML='<div>Lookup unavailable — type address manually.</div>'}}window.lookup=lookup;"""
+          replacement="""async function lookup(which){let input=$(which),q=input.value.trim(),box=$(which+'Suggestions');if(q.length<2)return;box.style.display='block';box.innerHTML='<div>Searching…</div>';try{const horleyLat=51.1743,horleyLon=-0.1780,deltaLat=0.2175,deltaLon=0.345;let localUrl='https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=gb&limit=8&addressdetails=1&bounded=1&viewbox='+encodeURIComponent((horleyLon-deltaLon)+','+(horleyLat+deltaLat)+','+(horleyLon+deltaLon)+','+(horleyLat-deltaLat))+'&q='+encodeURIComponent(q);let r=await fetch(localUrl,{headers:{'Accept':'application/json'}}),j=await r.json();if(!j.length){let wide=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=gb&limit=6&addressdetails=1&q='+encodeURIComponent(q),{headers:{'Accept':'application/json'}});j=await wide.json()}box.innerHTML=j.length?j.map((x,i)=>`<div onclick=\"pickAddress('${which}',${i})\">${e(x.display_name)}</div>`).join(''):'<div>No local match — press FIND or type address manually.</div>';window['_lookup_'+which]=j}catch{box.innerHTML='<div>Lookup unavailable — type address manually.</div>'}}window.lookup=lookup;"""
           ns,n=re.subn(pattern,replacement,s,count=1,flags=re.S)
           if n!=1:
               raise SystemExit('Could not find address lookup function')
@@ -31,11 +31,11 @@ jobs:
       - name: Commit dispatch update
         run: |
           if git diff --quiet; then
-            echo "Horley 10-mile address priority already enabled"
+            echo "Horley 15-mile address priority already enabled"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add legacy-dispatch.html
-          git commit -m "Prioritise address suggestions within 10 miles of Horley"
+          git commit -m "Prioritise address suggestions within 15 miles of Horley"
           git push
