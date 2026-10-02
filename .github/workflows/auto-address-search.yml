@@ -1,0 +1,41 @@
+name: Enable automatic dispatch address search
+
+on:
+  push:
+    paths:
+      - '.github/workflows/auto-address-search.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add automatic pickup and destination lookup
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('legacy-dispatch.html')
+          s = p.read_text()
+          marker = "</script></body></html>"
+          code = """\n// Automatic address suggestions for pickup and destination. FIND remains available as a fallback.\nconst addressLookupTimers={pickup:null,dest:null};\nfunction enableAutomaticAddressLookup(id){\n  const input=$(id);\n  if(!input)return;\n  input.addEventListener('input',()=>{\n    coords[id]=null;\n    clearTimeout(addressLookupTimers[id]);\n    const q=input.value.trim();\n    const box=$(id+'Suggestions');\n    if(q.length<3){if(box)box.style.display='none';return;}\n    addressLookupTimers[id]=setTimeout(()=>lookup(id),400);\n  });\n  input.addEventListener('keydown',ev=>{\n    if(ev.key==='Enter'){ev.preventDefault();clearTimeout(addressLookupTimers[id]);lookup(id);}\n  });\n}\nenableAutomaticAddressLookup('pickup');\nenableAutomaticAddressLookup('dest');\n"""
+          if 'enableAutomaticAddressLookup' not in s:
+              if marker not in s:
+                  raise SystemExit('Could not find closing script marker')
+              s = s.replace(marker, code + marker, 1)
+              p.write_text(s)
+          PY
+      - name: Commit dispatch update
+        run: |
+          if git diff --quiet; then
+            echo "Automatic address search already enabled"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add legacy-dispatch.html
+          git commit -m "Enable automatic pickup and destination address suggestions"
+          git push
