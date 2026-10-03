@@ -51,10 +51,57 @@ jobs:
           PY
       - name: Sync Horley Cars Driver
         run: npx cap sync android
+      - name: Configure release version
+        run: |
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          p = Path('android/app/build.gradle')
+          s = p.read_text()
+          version = int(os.environ['GITHUB_RUN_NUMBER']) + 100
+          s, count = re.subn(r'versionCode\s+\d+', f'versionCode {version}', s)
+          if count != 1:
+              raise SystemExit('Expected exactly one versionCode')
+          s = re.sub(r'versionName\s+"[^"]+"', f'versionName "1.0.{version}"', s)
+          p.write_text(s)
+          PY
       - name: Build Android test APK
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug
       - name: Build Play Store AAB
         run: cd android && ./gradlew bundleRelease
+      - name: Sign and verify Play Store AAB
+        env:
+          HORLEY_ANDROID_SIGNING: ${{ secrets.HORLEY_ANDROID_SIGNING }}
+        run: |
+          python3 - <<'PY'
+          import os, json, base64, subprocess, tempfile, zipfile
+          from pathlib import Path
+          raw = os.environ.get('HORLEY_ANDROID_SIGNING', '')
+          if not raw:
+              raise SystemExit('Missing HORLEY_ANDROID_SIGNING repository secret')
+          config = json.loads(raw)
+          bundle = Path('android/app/build/outputs/bundle/release/app-release.aab').resolve()
+          with tempfile.TemporaryDirectory() as tmp:
+              key = Path(tmp) / 'upload.jks'
+              key.write_bytes(base64.b64decode(config['keystore'], validate=True))
+              key.chmod(0o600)
+              env = os.environ.copy()
+              env['HORLEY_KEY_PASSWORD'] = config['password']
+              env.pop('HORLEY_ANDROID_SIGNING', None)
+              subprocess.run(['jarsigner', '-keystore', str(key),
+                  '-storepass:env', 'HORLEY_KEY_PASSWORD',
+                  '-keypass:env', 'HORLEY_KEY_PASSWORD',
+                  '-sigalg', 'SHA256withRSA', '-digestalg', 'SHA-256',
+                  str(bundle), config['alias']], env=env, check=True)
+              result = subprocess.run(['jarsigner', '-verify', str(bundle)],
+                  env=env, capture_output=True, text=True, check=True)
+              if 'jar verified.' not in result.stdout:
+                  raise SystemExit('AAB signature verification failed')
+              with zipfile.ZipFile(bundle) as z:
+                  if not any(n.upper().startswith('META-INF/') and n.upper().endswith('.RSA') for n in z.namelist()):
+                      raise SystemExit('AAB signature missing')
+          print('Signed AAB verified successfully')
+          PY
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:
