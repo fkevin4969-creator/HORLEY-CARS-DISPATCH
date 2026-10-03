@@ -6,7 +6,7 @@ on:
     paths:
       - 'customer-app/**'
       - 'customer/**'
-      - '.github/workflows/build-driver-android.yml'
+      - '.github/workflows/build-customer-android.yml'
 
 permissions:
   contents: write
