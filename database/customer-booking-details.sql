@@ -11,7 +11,12 @@ begin
  case when b.booking_status in ('assigned','accepted','arrived','passenger_on_board') then v.model end as vehicle_model,
  case when b.booking_status in ('assigned','accepted','arrived','passenger_on_board') then v.colour end as vehicle_colour,
  case when b.booking_status in ('assigned','accepted','arrived','passenger_on_board') then coalesce(v.registration,d.vehicle_registration) end as vehicle_registration,
- b.driver_id is not null and b.booking_status in ('assigned','accepted','arrived','passenger_on_board') as driver_allocated
+ case when b.booking_status in ('accepted','arrived') then coalesce(d.latitude,d.current_latitude) end as driver_latitude,
+case when b.booking_status in ('accepted','arrived') then coalesce(d.longitude,d.current_longitude) end as driver_longitude,
+case when b.booking_status in ('accepted','arrived') then d.location_updated_at end as driver_location_updated_at,
+case when b.booking_status in ('accepted','arrived') then b.pickup_latitude end as pickup_latitude,
+case when b.booking_status in ('accepted','arrived') then b.pickup_longitude end as pickup_longitude,
+b.driver_id is not null and b.booking_status in ('assigned','accepted','arrived','passenger_on_board') as driver_allocated
  from public.bookings b join public.customers c on c.id=b.customer_id
  left join public.drivers d on d.id=b.driver_id
  left join lateral (select vv.* from public.vehicles vv where (vv.id=b.vehicle_id and vv.driver_id=b.driver_id) or (b.vehicle_id is null and vv.driver_id=b.driver_id and vv.active=true) order by (vv.id=b.vehicle_id) desc nulls last,vv.created_at desc limit 1) v on true
