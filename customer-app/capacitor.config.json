@@ -1,6 +1,6 @@
 {
   "appId": "uk.co.horleycars.customer",
-  "appName": "Horley Cars",
+  "appName": "Horley Cars Customer Booking",
   "webDir": "www",
   "backgroundColor": "#111827",
   "android": {
