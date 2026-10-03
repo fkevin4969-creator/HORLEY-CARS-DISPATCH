@@ -1,0 +1,129 @@
+name: Build Horley Cars Customer Android
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'customer-app/**'
+      - 'customer/**'
+      - '.github/workflows/build-driver-android.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: customer-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install dependencies
+        run: npm install
+      - name: Package customer booking and accounts
+        run: |
+          mkdir -p www
+          cp ../customer/index.html ../customer/account.html www/
+      - name: Create Android project
+        run: npx cap add android
+      - name: Configure Android API 36, minSdk 24 and permissions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('android/variables.gradle')
+          if p.exists():
+              s=p.read_text()
+              s=re.sub(r'compileSdkVersion\s*=\s*\d+', 'compileSdkVersion = 36', s)
+              s=re.sub(r'targetSdkVersion\s*=\s*\d+', 'targetSdkVersion = 36', s)
+              s=re.sub(r'minSdkVersion\s*=\s*\d+', 'minSdkVersion = 24', s)
+              p.write_text(s)
+          m=Path('android/app/src/main/AndroidManifest.xml')
+          s=m.read_text()
+          perms='''<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.INTERNET" />'''
+          if 'ACCESS_FINE_LOCATION' not in s:
+              s=s.replace('<application',perms+'\n    <application',1)
+          m.write_text(s)
+          PY
+      - name: Sync Horley Cars Customer
+        run: npx cap sync android
+      - name: Configure release version
+        run: |
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          p = Path('android/app/build.gradle')
+          s = p.read_text()
+          version = int(os.environ['GITHUB_RUN_NUMBER']) + 100
+          s, count = re.subn(r'versionCode\s+\d+', f'versionCode {version}', s)
+          if count != 1:
+              raise SystemExit('Expected exactly one versionCode')
+          s = re.sub(r'versionName\s+"[^"]+"', f'versionName "1.0.{version}"', s)
+          p.write_text(s)
+          PY
+      - name: Build Android test APK
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - name: Build Play Store AAB
+        run: cd android && ./gradlew bundleRelease
+      - name: Sign and verify Play Store AAB
+        env:
+          HORLEY_ANDROID_SIGNING: ${{ secrets.HORLEY_ANDROID_SIGNING }}
+        run: |
+          python3 - <<'PY'
+          import os, json, base64, subprocess, tempfile, zipfile
+          from pathlib import Path
+          raw = os.environ.get('HORLEY_ANDROID_SIGNING', '')
+          if not raw:
+              raise SystemExit('Missing HORLEY_ANDROID_SIGNING repository secret')
+          config = json.loads(raw)
+          bundle = Path('android/app/build/outputs/bundle/release/app-release.aab').resolve()
+          with tempfile.TemporaryDirectory() as tmp:
+              key = Path(tmp) / 'upload.jks'
+              key.write_bytes(base64.b64decode(config['keystore'], validate=True))
+              key.chmod(0o600)
+              env = os.environ.copy()
+              env['HORLEY_KEY_PASSWORD'] = config['password']
+              env.pop('HORLEY_ANDROID_SIGNING', None)
+              subprocess.run(['jarsigner', '-keystore', str(key),
+                  '-storepass:env', 'HORLEY_KEY_PASSWORD',
+                  '-keypass:env', 'HORLEY_KEY_PASSWORD',
+                  '-sigalg', 'SHA256withRSA', '-digestalg', 'SHA-256',
+                  str(bundle), config['alias']], env=env, check=True)
+              result = subprocess.run(['jarsigner', '-verify', str(bundle)],
+                  env=env, capture_output=True, text=True, check=True)
+              if 'jar verified.' not in result.stdout:
+                  raise SystemExit('AAB signature verification failed')
+              with zipfile.ZipFile(bundle) as z:
+                  if not any(n.upper().startswith('META-INF/') and n.upper().endswith('.RSA') for n in z.namelist()):
+                      raise SystemExit('AAB signature missing')
+          print('Signed AAB verified successfully')
+          PY
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: horley-cars-customer-test-apk
+          path: customer-app/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload Play Store AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: horley-cars-customer-play-store-aab
+          path: customer-app/android/app/build/outputs/bundle/release/app-release.aab
+      - name: Publish direct-download APK
+        working-directory: .
+        run: |
+          mkdir -p downloads
+          cp customer-app/android/app/build/outputs/apk/debug/app-debug.apk downloads/Horley-Cars-Customer.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f downloads/Horley-Cars-Customer.apk
+          git commit -m "Update Horley Cars Customer APK" || exit 0
+          git pull --rebase origin main
+          git push
