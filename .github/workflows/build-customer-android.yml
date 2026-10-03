@@ -32,6 +32,14 @@ jobs:
         run: |
           mkdir -p www
           cp ../customer/index.html ../customer/account.html www/
+          python3 - <<'PY'
+          from pathlib import Path
+          for p in Path('www').glob('*.html'):
+              s = p.read_text().replace('<h1>HORLEY CARS</h1>', '<h1>Horley Cars Customer Booking</h1>')
+              s = s.replace('Horley Cars — Book a Taxi', 'Horley Cars Customer Booking')
+              s = s.replace('Horley Cars — Customer Account', 'Horley Cars Customer Booking — Account')
+              p.write_text(s)
+          PY
       - name: Create Android project
         run: npx cap add android
       - name: Configure Android API 36, minSdk 24 and permissions
