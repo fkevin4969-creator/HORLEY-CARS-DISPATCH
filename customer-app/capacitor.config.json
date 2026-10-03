@@ -1,0 +1,9 @@
+{
+  "appId": "uk.co.horleycars.customer",
+  "appName": "Horley Cars",
+  "webDir": "www",
+  "backgroundColor": "#111827",
+  "android": {
+    "allowMixedContent": false
+  }
+}
