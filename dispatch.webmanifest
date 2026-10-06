@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "Horley Cars Dispatch",
+  "short_name": "Horley Dispatch",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#34383d",
+  "theme_color": "#34383d",
+  "icons": [
+    {
+      "src": "driver-app/www/horley-cars-driver-logo.png",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
