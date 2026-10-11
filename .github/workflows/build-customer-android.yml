@@ -1,4 +1,4 @@
-name: Build Horley Cars Customer Android
+name: Build Carline DSM Customer Android
 
 on:
   workflow_dispatch:
@@ -39,9 +39,9 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           for p in Path('www').glob('*.html'):
-              s = p.read_text().replace('<h1>HORLEY CARS</h1>', '<h1>Horley Cars Customer Booking</h1>')
-              s = s.replace('Horley Cars — Book a Taxi', 'Horley Cars Customer Booking')
-              s = s.replace('Horley Cars — Customer Account', 'Horley Cars Customer Booking — Account')
+              s = p.read_text().replace('<h1>CARLINE DSM</h1>', '<h1>Carline DSM Customer Booking</h1>')
+              s = s.replace('Carline DSM — Book a Taxi', 'Carline DSM Customer Booking')
+              s = s.replace('Carline DSM — Customer Account', 'Carline DSM Customer Booking — Account')
               p.write_text(s)
           PY
       - name: Create Android project
@@ -65,7 +65,7 @@ jobs:
               s=s.replace('<application',perms+'\n    <application',1)
           m.write_text(s)
           PY
-      - name: Sync Horley Cars Customer
+      - name: Sync Carline DSM Customer
         run: npx cap sync android
       - name: Configure release version
         run: |
@@ -145,7 +145,7 @@ jobs:
             if git -C "$publish_dir" diff --cached --quiet; then
               exit 0
             fi
-            git -C "$publish_dir" commit -m "Update Horley Cars Customer APK"
+            git -C "$publish_dir" commit -m "Update Carline DSM Customer APK"
             if git -C "$publish_dir" push origin HEAD:main; then
               exit 0
             fi

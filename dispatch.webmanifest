@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Horley Cars Dispatch",
-  "short_name": "Horley Dispatch",
+  "name": "Carline DSM Dispatch",
+  "short_name": "Carline DSM",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

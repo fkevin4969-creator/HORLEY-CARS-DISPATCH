@@ -2,7 +2,7 @@
   "name": "horley-cars-customer",
   "version": "1.0.0",
   "private": true,
-  "description": "Horley Cars customer bookings",
+  "description": "Carline DSM customer bookings",
   "dependencies": {
     "@capacitor/android": "7.0.0",
     "@capacitor/core": "7.0.0"

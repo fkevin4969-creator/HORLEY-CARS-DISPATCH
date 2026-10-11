@@ -2,7 +2,7 @@
   "name": "horley-cars-driver",
   "version": "1.0.0",
   "private": true,
-  "description": "Horley Cars Driver mobile app",
+  "description": "Carline DSM Driver mobile app",
   "scripts": {
     "android:add": "npx cap add android",
     "ios:add": "npx cap add ios",
