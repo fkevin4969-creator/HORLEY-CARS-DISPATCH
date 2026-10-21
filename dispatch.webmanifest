@@ -9,9 +9,10 @@
   "theme_color": "#34383d",
   "icons": [
     {
-      "src": "driver-app/www/horley-cars-driver-logo.png",
+      "src": "assets/carline-dsm-driver-icon.png",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any",
+      "sizes": "512x512"
     }
   ]
 }

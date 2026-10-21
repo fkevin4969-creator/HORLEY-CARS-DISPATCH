@@ -7,6 +7,8 @@ on:
     paths:
       - 'driver-app/**'
       - '.github/workflows/build-driver-android.yml'
+      - 'assets/carline-dsm-driver-icon.png'
+      - 'scripts/generate-android-icons.py'
 
 permissions:
   contents: write
@@ -51,6 +53,10 @@ jobs:
           PY
       - name: Sync Carline DSM Driver
         run: npx cap sync android
+      - name: Generate Carline DSM launcher icons
+        run: |
+          python3 -m pip install Pillow==11.3.0
+          python3 ../scripts/generate-android-icons.py ../assets/carline-dsm-driver-icon.png android/app/src/main/res
       - name: Configure release version
         run: |
           python3 - <<'PY'

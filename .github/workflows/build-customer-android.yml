@@ -7,6 +7,8 @@ on:
       - 'customer-app/**'
       - 'customer/**'
       - '.github/workflows/build-customer-android.yml'
+      - 'assets/carline-dsm-customer-icon.png'
+      - 'scripts/generate-android-icons.py'
 
 concurrency:
   group: customer-android-${{ github.ref }}
@@ -36,6 +38,8 @@ jobs:
         run: |
           mkdir -p www
           cp ../customer/index.html ../customer/account.html www/
+          mkdir -p www/assets
+          cp ../assets/carline-dsm-customer-icon.png www/assets/
           python3 - <<'PY'
           from pathlib import Path
           for p in Path('www').glob('*.html'):
@@ -67,6 +71,10 @@ jobs:
           PY
       - name: Sync Carline DSM Customer
         run: npx cap sync android
+      - name: Generate Carline DSM launcher icons
+        run: |
+          python3 -m pip install Pillow==11.3.0
+          python3 ../scripts/generate-android-icons.py ../assets/carline-dsm-customer-icon.png android/app/src/main/res
       - name: Configure release version
         run: |
           python3 - <<'PY'
